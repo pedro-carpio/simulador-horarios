@@ -57,3 +57,30 @@ export async function obtenerClases(materiaId: number, gestion: string): Promise
   if (error) throw error
   return data as Clase[]
 }
+
+export async function cargarHorarios(payload: {
+  carrera_id: number
+  gestion: string
+  niveles: {
+    codigo: string
+    nombre: string
+    materias: {
+      nombre: string
+      codigo: string
+      grupos: {
+        numero: number
+        clases: {
+          dia: string
+          docente: string
+          aula: string
+          hora_inicio: string
+          hora_fin: string
+        }[]
+      }[]
+    }[]
+  }[]
+}): Promise<CargaResult> {
+  const { data, error } = await supabase.rpc('cargar_horarios', { payload })
+  if (error) throw error
+  return data as CargaResult
+}
