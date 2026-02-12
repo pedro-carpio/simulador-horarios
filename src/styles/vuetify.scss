@@ -1,0 +1,7 @@
+// Solo los overrides necesarios de Vuetify.
+// El plugin vite-plugin-vuetify con styles.configFile
+// hace treeshake de los estilos SASS automáticamente.
+
+@use 'vuetify/settings' with (
+  $body-font-family: 'Roboto, sans-serif'
+);
