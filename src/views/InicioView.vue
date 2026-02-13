@@ -45,14 +45,14 @@ async function seleccionar(carrera: Carrera) {
 </script>
 
 <template>
-  <v-container class="d-flex align-center justify-center" style="min-height: 100dvh">
+  <v-container class="d-flex flex-column align-center justify-center" style="min-height: 100dvh">
     <div class="w-100 d-flex justify-center mb-4">
       <router-link
         to="/acerca-de"
         class="text-caption text-medium-emphasis"
         style="text-decoration: underline"
       >
-        Acerca de
+        Acerca de esta aplicación
       </router-link>
     </div>
     <v-card max-width="500" width="100%" elevation="2" rounded="lg">

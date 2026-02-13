@@ -70,6 +70,22 @@ const router = useRouter()
         </div>
 
         <div class="mb-6">
+          <div class="text-subtitle-1 font-weight-medium mb-2">Instrucciones rápidas</div>
+          <ul>
+            <li>Escoge el semestre con las materias que quieres cursar.</li>
+            <li>Escoge el grupo de la materia al que quieres participar.</li>
+            <li>
+              ¿Tienes un choque? verifica con otro grupo de alguna materia que tenga el choque.
+            </li>
+            <li>
+              Si el choque persiste y no importa tanto intentarlo acomodarlo: lo siento, a veces
+              pasa; quizás debas escoger a qué materia participar este semestre.
+            </li>
+            <li>Puedes imprimir o descargar este horario usando los botones.</li>
+          </ul>
+        </div>
+
+        <div class="mb-6">
           <div class="text-subtitle-1 font-weight-medium mb-2">Licencia y participación</div>
           <p>
             Este proyecto es Open Source. Revisa el repositorio para detalles sobre la licencia y

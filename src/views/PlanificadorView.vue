@@ -12,6 +12,7 @@ import {
   mdiDownload,
   mdiDotsVertical,
   mdiClose,
+  mdiHelpCircle,
 } from '@mdi/js'
 import SemanaView from '@/components/SemanaView.vue'
 
@@ -26,6 +27,7 @@ const materias = ref<Materia[]>([])
 const cargando = ref(true)
 const errorMsg = ref('')
 const lastScraped = ref<string | null>(null)
+const helpDialog = ref(false)
 
 // Sidebar: nivel seleccionado y materias expandidas
 const nivelActivo = ref<string | null>(null)
@@ -249,7 +251,7 @@ async function toggleMateria(materia: Materia) {
             @click="seleccionarNivel(nivel.codigo)"
           >
             <v-list-item-title class="font-weight-medium">
-              {{ nivel.nombre }}
+              Semestre {{ nivel.nombre }}
             </v-list-item-title>
             <v-list-item-subtitle>{{ nivel.codigo }}</v-list-item-subtitle>
           </v-list-item>
@@ -312,6 +314,14 @@ async function toggleMateria(materia: Materia) {
             >
               Reportar un problema
             </a>
+            <a
+              href="#"
+              @click.prevent="helpDialog = true"
+              class="text-caption text-medium-emphasis"
+              style="text-decoration: underline; color: inherit; margin-left: 12px"
+            >
+              Necesito ayuda
+            </a>
           </div>
         </div>
       </v-list>
@@ -330,6 +340,9 @@ async function toggleMateria(materia: Materia) {
           </v-btn>
           <v-btn icon variant="outlined" size="small" @click="descargar" title="Descargar">
             <v-icon :icon="mdiDownload" />
+          </v-btn>
+          <v-btn icon variant="outlined" size="small" @click="helpDialog = true" title="Ayuda">
+            <v-icon :icon="mdiHelpCircle" />
           </v-btn>
         </div>
 
@@ -467,6 +480,14 @@ async function toggleMateria(materia: Materia) {
                 </v-avatar>
               </template>
             </v-list-item>
+            <v-list-item @click="helpDialog = true">
+              <v-list-item-title class="text-body-2">Ayuda</v-list-item-title>
+              <template #append>
+                <v-avatar size="32" color="primary" variant="tonal">
+                  <v-icon :icon="mdiHelpCircle" size="18" />
+                </v-avatar>
+              </template>
+            </v-list-item>
           </v-list>
         </div>
       </v-expand-transition>
@@ -484,6 +505,14 @@ async function toggleMateria(materia: Materia) {
             style="text-decoration: underline; color: inherit"
           >
             Reportar un problema
+          </a>
+          <a
+            href="#"
+            @click.prevent="helpDialog = true"
+            class="text-caption text-medium-emphasis"
+            style="text-decoration: underline; color: inherit; margin-left: 12px"
+          >
+            Necesito ayuda
           </a>
         </div>
       </div>
@@ -569,6 +598,36 @@ async function toggleMateria(materia: Materia) {
       </div>
     </v-expand-transition>
   </div>
+
+  <!-- Dialog de ayuda -->
+  <v-dialog v-model="helpDialog" persistent max-width="520">
+    <v-card>
+      <v-card-title class="text-h6">Ayuda rápida</v-card-title>
+      <v-card-text>
+        <ol>
+          <li>Escoge el semestre con las materias que quieres cursar.</li>
+          <li>Escoge el grupo de la materia al que quieres participar.</li>
+          <li>¿Tienes un choque? verifica con otro grupo de alguna materia que tenga el choque.</li>
+          <li>
+            Si el choque persiste y no importa tanto intentarlo acomodarlo: lo siento, a veces pasa;
+            quizás debas escoger a qué materia participar este semestre.
+          </li>
+        </ol>
+        <div class="d-flex align-center ga-3 mt-4">
+          <v-btn icon variant="outlined" @click="imprimir" title="Imprimir horario">
+            <v-icon :icon="mdiPrinter" />
+          </v-btn>
+          <div class="text-body-2 ml-3">
+            Puedes imprimir o descargar este horario usando los botones.
+          </div>
+        </div>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn text @click="helpDialog = false">Cerrar</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
