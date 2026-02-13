@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { obtenerMaterias, obtenerClases, type Materia, type Clase } from '@/services/horarios'
 import { mdiChevronLeft, mdiBookOpenVariant, mdiChevronDown, mdiPlus } from '@mdi/js'
+import SemanaView from '@/components/SemanaView.vue'
 
 const route = useRoute()
 const carrera = route.params.carrera as string
@@ -142,15 +143,6 @@ async function toggleMateria(materia: Materia) {
     }
   }
 }
-
-const diasOrden: Record<string, number> = {
-  Lunes: 1,
-  Martes: 2,
-  Miercoles: 3,
-  Jueves: 4,
-  Viernes: 5,
-  Sabado: 6,
-}
 </script>
 
 <template>
@@ -254,45 +246,7 @@ const diasOrden: Record<string, number> = {
         </div>
 
         <!-- Cursos seleccionados -->
-        <template v-else>
-          <h2 class="text-h5 mb-4">Cursos seleccionados</h2>
-          <v-row>
-            <v-col v-for="curso in cursosSeleccionados" :key="curso.key" cols="12" sm="6" lg="4">
-              <v-card variant="outlined" rounded="lg">
-                <v-card-title class="text-subtitle-1">
-                  {{ curso.materiaNombre }}
-                </v-card-title>
-                <v-card-subtitle>Grupo {{ curso.grupoNumero }}</v-card-subtitle>
-                <v-divider />
-                <v-table density="compact">
-                  <thead>
-                    <tr>
-                      <th>Día</th>
-                      <th>Horario</th>
-                      <th>Aula</th>
-                      <th>Docente</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="(clase, i) in curso.clases.sort(
-                        (a, b) => (diasOrden[a.dia] ?? 7) - (diasOrden[b.dia] ?? 7),
-                      )"
-                      :key="i"
-                    >
-                      <td>{{ clase.dia }}</td>
-                      <td>
-                        {{ clase.hora_inicio.slice(0, 5) }} - {{ clase.hora_fin.slice(0, 5) }}
-                      </td>
-                      <td>{{ clase.aula }}</td>
-                      <td class="text-caption">{{ clase.docente }}</td>
-                    </tr>
-                  </tbody>
-                </v-table>
-              </v-card>
-            </v-col>
-          </v-row>
-        </template>
+        <semana-view v-else :cursos="cursosSeleccionados" />
       </v-container>
     </v-main>
   </v-layout>
@@ -323,49 +277,7 @@ const diasOrden: Record<string, number> = {
         </div>
 
         <!-- Cursos seleccionados -->
-        <template v-else>
-          <v-card
-            v-for="curso in cursosSeleccionados"
-            :key="curso.key"
-            variant="outlined"
-            rounded="lg"
-            class="mb-3"
-          >
-            <v-card-title class="text-subtitle-2">
-              {{ curso.materiaNombre }}
-            </v-card-title>
-            <v-card-subtitle class="text-caption">Grupo {{ curso.grupoNumero }}</v-card-subtitle>
-            <v-divider />
-            <v-table density="compact">
-              <thead>
-                <tr>
-                  <th>Día</th>
-                  <th>Horario</th>
-                  <th>Aula</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(clase, i) in curso.clases.sort(
-                    (a, b) => (diasOrden[a.dia] ?? 7) - (diasOrden[b.dia] ?? 7),
-                  )"
-                  :key="i"
-                >
-                  <td>{{ clase.dia }}</td>
-                  <td>{{ clase.hora_inicio.slice(0, 5) }} - {{ clase.hora_fin.slice(0, 5) }}</td>
-                  <td>{{ clase.aula }}</td>
-                </tr>
-              </tbody>
-            </v-table>
-            <v-card-text
-              v-for="(clase, i) in curso.clases"
-              :key="'d' + i"
-              class="text-caption text-medium-emphasis py-1"
-            >
-              {{ clase.docente }}
-            </v-card-text>
-          </v-card>
-        </template>
+        <semana-view v-else :cursos="cursosSeleccionados" />
       </v-container>
     </div>
 
