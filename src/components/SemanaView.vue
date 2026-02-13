@@ -6,11 +6,12 @@ import type { Clase } from '@/services/horarios'
 import { descargarHorario, imprimirHorario } from '@/utils/exportarHorario'
 
 /* -- Tipos -- */
+
 interface CursoSeleccionado {
   key: string
   materiaNombre: string
   materiaCodigo: string
-  grupoNumero: number
+  grupoNumero: string
   clases: Clase[]
 }
 
@@ -184,7 +185,7 @@ const eventosBase = computed<EventoCal[]>(() => {
         materiaCodigo: curso.materiaCodigo,
         materiaNombre: curso.materiaNombre,
         grupoKey: curso.key,
-        grupoNumero: curso.grupoNumero,
+        grupoNumero: Number(curso.grupoNumero),
         dia: c.dia,
         aula: c.aula,
         docente: c.docente,

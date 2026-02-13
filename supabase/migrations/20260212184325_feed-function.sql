@@ -173,19 +173,20 @@ BEGIN
             -- ── 5. Iterar grupos de la materia ─────────────
             FOR v_grupo IN SELECT * FROM jsonb_array_elements(v_materia->'grupos')
             LOOP
-                INSERT INTO grupos (materia_id, gestion_id, numero)
-                VALUES (
-                    v_materia_id,
-                    v_gestion_id,
-                    (v_grupo->>'numero')::smallint
-                )
-                ON CONFLICT (materia_id, gestion_id, numero) DO NOTHING;
 
-                SELECT id INTO v_grupo_id
-                FROM grupos
-                WHERE materia_id = v_materia_id
-                  AND gestion_id = v_gestion_id
-                  AND numero = (v_grupo->>'numero')::smallint;
+                                INSERT INTO grupos (materia_id, gestion_id, numero)
+                                VALUES (
+                                        v_materia_id,
+                                        v_gestion_id,
+                                        v_grupo->>'numero'
+                                )
+                                ON CONFLICT (materia_id, gestion_id, numero) DO NOTHING;
+
+                                SELECT id INTO v_grupo_id
+                                FROM grupos
+                                WHERE materia_id = v_materia_id
+                                    AND gestion_id = v_gestion_id
+                                    AND numero = v_grupo->>'numero';
 
                 v_grupos_cnt := v_grupos_cnt + 1;
 

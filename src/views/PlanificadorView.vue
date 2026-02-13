@@ -96,26 +96,27 @@ const niveles = computed<Nivel[]>(() => {
 })
 
 // Extraer grupos únicos de las clases cacheadas de una materia
-function gruposDeMateria(materiaId: number): { numero: number; docente: string }[] {
+
+function gruposDeMateria(materiaId: number): { numero: string; docente: string }[] {
   const clases = clasesCache.value[materiaId] ?? []
-  const map = new Map<number, string>()
+  const map = new Map<string, string>()
   for (const c of clases) {
     if (!map.has(c.grupo_numero)) map.set(c.grupo_numero, c.docente)
   }
   return Array.from(map.entries())
-    .sort(([a], [b]) => a - b)
+    .sort(([a], [b]) => a.localeCompare(b, 'es', { numeric: true }))
     .map(([numero, docente]) => ({ numero, docente }))
 }
 
-function grupoKey(materiaId: number, grupoNumero: number) {
+function grupoKey(materiaId: number, grupoNumero: string) {
   return `${materiaId}-${grupoNumero}`
 }
 
-function isGrupoSeleccionado(materiaId: number, grupoNumero: number) {
+function isGrupoSeleccionado(materiaId: number, grupoNumero: string) {
   return gruposSeleccionados.value.has(grupoKey(materiaId, grupoNumero))
 }
 
-function toggleGrupo(materiaId: number, grupoNumero: number) {
+function toggleGrupo(materiaId: number, grupoNumero: string) {
   const key = grupoKey(materiaId, grupoNumero)
   const next = new Set(gruposSeleccionados.value)
   if (next.has(key)) {
@@ -127,11 +128,12 @@ function toggleGrupo(materiaId: number, grupoNumero: number) {
 }
 
 // Datos para la vista principal: todos los grupos seleccionados con su info
+
 interface GrupoSeleccionado {
   key: string
   materiaNombre: string
   materiaCodigo: string
-  grupoNumero: number
+  grupoNumero: string
   clases: Clase[]
 }
 
@@ -140,7 +142,7 @@ const cursosSeleccionados = computed<GrupoSeleccionado[]>(() => {
   for (const key of gruposSeleccionados.value) {
     const [matIdStr, grpStr] = key.split('-')
     const materiaId = Number(matIdStr)
-    const grupoNumero = Number(grpStr)
+    const grupoNumero = grpStr ?? ''
     const mat = materias.value.find((m) => m.id === materiaId)
     if (!mat) continue
     const clases = (clasesCache.value[materiaId] ?? []).filter(

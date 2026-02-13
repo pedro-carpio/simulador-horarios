@@ -59,7 +59,7 @@ CREATE TABLE grupos (
     id smallserial PRIMARY KEY,
     materia_id smallint NOT NULL REFERENCES materias(id) ON DELETE CASCADE,
     gestion_id smallint NOT NULL REFERENCES gestiones(id) ON DELETE RESTRICT,
-    numero smallint NOT NULL CHECK (numero BETWEEN 1 AND 10),
+    numero text NOT NULL,
     UNIQUE (materia_id, gestion_id, numero)
 );
 

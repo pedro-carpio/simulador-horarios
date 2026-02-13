@@ -105,7 +105,7 @@ CREATE OR REPLACE FUNCTION obtener_clases_por_materia(
     p_gestion    text
 )
 RETURNS TABLE (
-    grupo_numero smallint,
+    grupo_numero text,
     dia          dia_semana,
     docente      text,
     aula         text,

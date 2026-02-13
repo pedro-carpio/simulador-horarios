@@ -17,7 +17,7 @@ export const ClaseSchema = z.object({
 })
 
 export const GrupoSchema = z.object({
-  numero: z.number().int().min(1).max(10),
+  numero: z.string().min(1, 'Número de grupo vacío'),
   clases: z.array(ClaseSchema).min(1, 'Grupo sin clases'),
 })
 
