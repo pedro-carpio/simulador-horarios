@@ -303,10 +303,28 @@ async function toggleMateria(materia: Materia) {
           class="d-flex flex-column align-center justify-center"
           style="min-height: 60vh"
         >
-          <v-icon :icon="mdiBookOpenVariant" size="64" color="grey-lighten-1" />
-          <p class="text-h6 text-medium-emphasis mt-4">
-            Selecciona grupos desde el panel izquierdo
-          </p>
+          <template v-if="materias.length === 0 && !cargando && !errorMsg">
+            <v-icon size="64" color="grey-lighten-1">mdi-emoticon-sad-outline</v-icon>
+            <p class="text-h6 text-medium-emphasis mt-4 text-center">
+              Parece que no encontramos los horarios de esta materia
+            </p>
+            <a
+              :href="`https://wa.me/59177914381?text=${encodeURIComponent('Tengo un problema con la carrera ' + carrera + ' Y YA CONSULTE SI HAY HORARIOS PUBLICOS PARA MI CARRERA')}`"
+              target="_blank"
+              rel="noopener"
+              style="text-decoration: none; margin-top: 16px;"
+            >
+              <v-btn color="primary" variant="tonal">
+                Reportar este error
+              </v-btn>
+            </a>
+          </template>
+          <template v-else>
+            <v-icon :icon="mdiBookOpenVariant" size="64" color="grey-lighten-1" />
+            <p class="text-h6 text-medium-emphasis mt-4">
+              Selecciona grupos desde el panel izquierdo
+            </p>
+          </template>
         </div>
 
         <!-- Cursos seleccionados -->
@@ -340,10 +358,28 @@ async function toggleMateria(materia: Materia) {
           class="d-flex flex-column align-center justify-center"
           style="min-height: 40vh"
         >
-          <v-icon :icon="mdiBookOpenVariant" size="48" color="grey-lighten-1" />
-          <p class="text-body-1 text-medium-emphasis mt-3 text-center">
-            Selecciona grupos para comenzar
-          </p>
+          <template v-if="materias.length === 0 && !cargando && !errorMsg">
+            <v-icon size="48" color="grey-lighten-1">mdi-emoticon-sad-outline</v-icon>
+            <p class="text-body-1 text-medium-emphasis mt-3 text-center">
+              Parece que no encontramos los horarios de esta materia
+            </p>
+            <a
+              :href="`https://wa.me/59177914381?text=${encodeURIComponent('Tengo un problema con la carrera ' + carrera + ' Y YA CONSULTE SI HAY HORARIOS PUBLICOS PARA MI CARRERA')}`"
+              target="_blank"
+              rel="noopener"
+              style="text-decoration: none; margin-top: 12px;"
+            >
+              <v-btn color="primary" variant="tonal" size="small">
+                Reportar este error
+              </v-btn>
+            </a>
+          </template>
+          <template v-else>
+            <v-icon :icon="mdiBookOpenVariant" size="48" color="grey-lighten-1" />
+            <p class="text-body-1 text-medium-emphasis mt-3 text-center">
+              Selecciona grupos para comenzar
+            </p>
+          </template>
         </div>
 
         <!-- Cursos seleccionados -->
