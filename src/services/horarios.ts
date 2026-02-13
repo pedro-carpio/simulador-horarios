@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 
-// ── Tipos ──────────────────────────────────────────────
+// -- Tipos ----------------------------------------------
 
 export interface Carrera {
   id: number
@@ -16,7 +16,7 @@ export interface Materia {
 }
 
 export interface Clase {
-  grupo_numero: number
+  grupo_numero: string
   dia: string
   docente: string
   aula: string
@@ -31,7 +31,7 @@ export interface CargaResult {
   clases: number
 }
 
-// ── Servicios ──────────────────────────────────────────
+// -- Servicios ------------------------------------------
 
 export async function obtenerCarreras(facultadId: number): Promise<Carrera[]> {
   const { data, error } = await supabase.rpc('obtener_carreras_por_facultad', {

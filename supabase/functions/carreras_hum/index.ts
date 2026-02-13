@@ -47,7 +47,7 @@ function parseCarreras(html: string): { codigo: string; nombre: string }[] {
 }
 
 Deno.serve(async (req) => {
-  // ── Validar método ──
+  // -- Validar método --
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Método no permitido" }), {
       status: 405,
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ── Validar secret ──
+  // -- Validar secret --
   const secret = req.headers.get("x-scrape-secret") ?? "";
   if (!SCRAPE_SECRET || secret !== SCRAPE_SECRET) {
     return new Response(JSON.stringify({ error: "No autorizado" }), {
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ── 1. Fetch HTML ──
+    // -- 1. Fetch HTML --
     const res = await fetch(TARGET_URL, {
       headers: {
         "User-Agent":
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
 
     const html = await res.text();
 
-    // ── 2. Parsear carreras ──
+    // -- 2. Parsear carreras --
     const carreras = parseCarreras(html);
 
     if (carreras.length === 0) {
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── 3. Asegurar facultad existe ──
+    // -- 3. Asegurar facultad existe --
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Upsert facultad
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
 
     const facultadId = facData.id;
 
-    // ── 4. Llamar RPC upsert_carreras ──
+    // -- 4. Llamar RPC upsert_carreras --
     const { data: rpcResult, error: rpcError } = await supabase.rpc(
       "upsert_carreras",
       {

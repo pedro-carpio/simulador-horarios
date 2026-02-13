@@ -256,10 +256,10 @@ async function downloadPdf(carreraCodigo: string, nivel: string): Promise<Buffer
 async function main() {
   console.log(chalk.bold.magenta('\n🎓 Cargador de Horarios — Fac. Humanidades\n'))
 
-  // ── Setup ──
+  // -- Setup --
   const sb = await setupSupabase()
 
-  // ── Carreras ──
+  // -- Carreras --
   log.title('Selección de carrera')
 
   let carreras = await fetchCarreras(sb)

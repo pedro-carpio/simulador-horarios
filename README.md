@@ -189,7 +189,7 @@ Carga masiva de horarios para una carrera existente. Recibe un JSON con múltipl
 ### Flujo de uso
 
 ```
-Facultad ──▶ obtenerCarreras() ──▶ Carreras
-Carrera  ──▶ obtenerMaterias() ──▶ Materias (con nivel)
-Materia  ──▶ obtenerClases()   ──▶ Clases semanales por grupo
+Facultad --▶ obtenerCarreras() --▶ Carreras
+Carrera  --▶ obtenerMaterias() --▶ Materias (con nivel)
+Materia  --▶ obtenerClases()   --▶ Clases semanales por grupo
 ```

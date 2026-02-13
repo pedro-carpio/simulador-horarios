@@ -11,7 +11,7 @@
 
 import type { PdfPage, TextItem } from './pdf-reader.js'
 
-/* ── Tipos de salida ─────────────────────────────────────── */
+/* -- Tipos de salida --------------------------------------- */
 
 export interface ClaseParsed {
   dia: string
@@ -46,7 +46,7 @@ export interface HorarioParsed {
   niveles: NivelParsed[]
 }
 
-/* ── Mapas de normalización ──────────────────────────────── */
+/* -- Mapas de normalización -------------------------------- */
 
 const DIA_MAP: Record<string, string> = {
   LUNES: 'Lunes',
@@ -74,7 +74,7 @@ const NIVEL_NOMBRE_A_CODIGO: Record<string, string> = {
 
 const DIAS_VALIDOS = new Set(Object.keys(DIA_MAP))
 
-/* ── Utilidades ──────────────────────────────────────────── */
+/* -- Utilidades -------------------------------------------- */
 
 /** Title Case: "TRABAJO SOCIAL" → "Trabajo Social" */
 function titleCase(str: string): string {
@@ -110,7 +110,7 @@ function parseMateriaLine(raw: string): { nombre: string; codigo: string } {
   }
 }
 
-/* ── Helpers internos del parser ──────────────────────────── */
+/* -- Helpers internos del parser ---------------------------- */
 
 /** Items to skip: header labels, footers, decorative brackets */
 const SKIP_TEXTS = new Set([
@@ -128,7 +128,7 @@ function isHeaderLabel(item: TextItem): boolean {
   return SKIP_TEXTS.has(item.text) || item.text.startsWith('© 2021') || item.text.startsWith('Fecha/Hora')
 }
 
-/* ── Parser principal ────────────────────────────────────── */
+/* -- Parser principal -------------------------------------- */
 
 /**
  * Parse all pages of a PDF into structured horario data.
@@ -178,7 +178,7 @@ export function parseHorarioPdf(pages: PdfPage[]): HorarioParsed {
     // Skip footers and decorative items
     if (isFooter(it) || isHeaderLabel(it)) continue
 
-    // ── HEADER BLOCK: "Carrera:" signals a (new) nivel section ──
+    // -- HEADER BLOCK: "Carrera:" signals a (new) nivel section --
     if (it.text === 'Carrera:') {
       // Flush previous nivel
       flushNivel()
@@ -220,7 +220,7 @@ export function parseHorarioPdf(pages: PdfPage[]): HorarioParsed {
     // No nivel context yet — skip
     if (!currentNivel) continue
 
-    // ── MATERIA marker ──
+    // -- MATERIA marker --
     if (it.text === 'MATERIA:' && it.x <= 40) {
       flush()
 
@@ -234,7 +234,7 @@ export function parseHorarioPdf(pages: PdfPage[]): HorarioParsed {
       continue
     }
 
-    // ── GRUPO marker ──
+    // -- GRUPO marker --
     if (it.text === 'Grupo:' && it.x <= 40) {
       // Flush previous grupo (but stay in same materia)
       if (currentGrupo && currentMateria) {
@@ -250,7 +250,7 @@ export function parseHorarioPdf(pages: PdfPage[]): HorarioParsed {
       continue
     }
 
-    // ── Class data row: detect by day name at x≈130 ──
+    // -- Class data row: detect by day name at x≈130 --
     if (it.x >= 100 && it.x <= 180 && DIAS_VALIDOS.has(it.text.toUpperCase())) {
       if (!currentGrupo) continue
 
