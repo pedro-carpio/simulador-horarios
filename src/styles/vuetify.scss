@@ -3,5 +3,8 @@
 // hace treeshake de los estilos SASS automáticamente.
 
 @use 'vuetify/settings' with (
-  $body-font-family: 'Roboto, sans-serif'
+  $body-font-family: (
+    'Roboto',
+    sans-serif,
+  )
 );

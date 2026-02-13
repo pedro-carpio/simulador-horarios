@@ -381,17 +381,29 @@ defineExpose({ descargar, imprimir })
 :deep(.v-calendar-daily_head-day-label) {
   display: none !important;
 }
+:deep(.v-calendar-weekly__head-weekday),
+:deep(.v-calendar-daily_head-weekday) {
+  background-color: #1565c0;
+  color: #fff !important;
+  font-weight: 600;
+  padding: 4px 0;
+}
 .semana-ev {
   overflow: hidden;
-  line-height: 1.25;
+  line-height: 1.3;
   cursor: default;
 }
 .semana-ev__name {
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .semana-ev__detail {
-  font-size: 10px;
-  opacity: 0.85;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .semana-dot {
   display: inline-block;

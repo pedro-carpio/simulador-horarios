@@ -69,7 +69,11 @@ async function generarPDF(opts: ExportOpts): Promise<jsPDF> {
 
 export async function descargarHorario(opts: ExportOpts): Promise<void> {
   const pdf = await generarPDF(opts)
-  const nombreArchivo = opts.titulo.replace(/\s+/g, '_').toLowerCase()
+  let nombreArchivo = opts.titulo.replace(/\s+/g, '_').toLowerCase()
+  if (opts.subtitulo) {
+    const nivelSlug = opts.subtitulo.replace(/\s+/g, '_').toLowerCase()
+    nombreArchivo += `_${nivelSlug}`
+  }
   pdf.save(`${nombreArchivo}.pdf`)
 }
 

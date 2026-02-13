@@ -12,6 +12,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@fontsource/roboto": "^5.2.9",
     "@mdi/js": "^7.4.47",
     "@supabase/supabase-js": "^2.95.3",
     "html2canvas-pro": "^1.6.6",
