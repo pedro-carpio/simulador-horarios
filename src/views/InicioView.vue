@@ -38,7 +38,9 @@ function seleccionar(carrera: Carrera) {
 <template>
   <v-container class="d-flex align-center justify-center" style="min-height: 100dvh">
     <v-card max-width="500" width="100%" elevation="2" rounded="lg">
-      <v-card-title class="text-h5 text-center pt-6"> Simulador de Horarios </v-card-title>
+      <v-card-title class="text-h5 text-center pt-6">
+        Simulador de Horarios para Humanidades
+      </v-card-title>
 
       <v-card-subtitle class="text-center pb-2">
         Selecciona tu carrera para comenzar
