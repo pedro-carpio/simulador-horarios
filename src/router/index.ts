@@ -13,6 +13,11 @@ const router = createRouter({
       name: 'planificador',
       component: () => import('@/views/PlanificadorView.vue'),
     },
+    {
+      path: '/acerca-de',
+      name: 'acerca',
+      component: () => import('@/views/AcercaDeView.vue'),
+    },
   ],
 })
 
