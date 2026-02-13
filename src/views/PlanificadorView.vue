@@ -2,7 +2,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { obtenerMaterias, obtenerClases, type Materia, type Clase } from '@/services/horarios'
-import { mdiChevronLeft, mdiBookOpenVariant, mdiChevronDown, mdiPlus } from '@mdi/js'
+import {
+  mdiChevronLeft,
+  mdiBookOpenVariant,
+  mdiChevronDown,
+  mdiPlus,
+  mdiDeleteSweep,
+  mdiPrinter,
+  mdiDownload,
+  mdiDotsVertical,
+  mdiClose,
+} from '@mdi/js'
 import SemanaView from '@/components/SemanaView.vue'
 
 const route = useRoute()
@@ -27,6 +37,15 @@ const gruposSeleccionados = ref(new Set<string>())
 
 // Mobile: panel inferior visible
 const panelMobileAbierto = ref(true)
+
+// Mobile: FAB menú acciones
+const fabAbierto = ref(false)
+
+// Acción: quitar todos los grupos seleccionados
+function quitarTodo() {
+  gruposSeleccionados.value = new Set()
+  fabAbierto.value = false
+}
 
 // Agrupar materias por nivel
 interface Nivel {
@@ -231,8 +250,21 @@ async function toggleMateria(materia: Materia) {
     </v-navigation-drawer>
 
     <!-- Contenido principal desktop -->
-    <v-main>
+    <v-main scrollable>
       <v-container fluid>
+        <!-- Barra de acciones desktop -->
+        <div v-if="cursosSeleccionados.length > 0" class="d-flex justify-end ga-2 mb-3">
+          <v-btn icon variant="outlined" size="small" @click="quitarTodo" title="Quitar todo">
+            <v-icon :icon="mdiDeleteSweep" />
+          </v-btn>
+          <v-btn icon variant="outlined" size="small" title="Imprimir">
+            <v-icon :icon="mdiPrinter" />
+          </v-btn>
+          <v-btn icon variant="outlined" size="small" title="Descargar">
+            <v-icon :icon="mdiDownload" />
+          </v-btn>
+        </div>
+
         <!-- Sin grupos seleccionados -->
         <div
           v-if="cursosSeleccionados.length === 0"
@@ -254,7 +286,7 @@ async function toggleMateria(materia: Materia) {
   <!-- ════════ MOBILE ════════ -->
   <div class="d-flex d-md-none flex-column h-screen">
     <!-- Parte superior: cursos seleccionados -->
-    <div class="flex-grow-1 overflow-y-auto">
+    <div class="flex-grow-1 overflow-y-auto" style="min-height: 0">
       <!-- Header mobile -->
       <v-toolbar density="compact" flat>
         <v-btn :icon="mdiChevronLeft" variant="text" size="small" to="/" />
@@ -281,17 +313,60 @@ async function toggleMateria(materia: Materia) {
       </v-container>
     </div>
 
-    <!-- Botón toggle panel inferior -->
-    <v-btn
-      block
-      variant="tonal"
-      rounded="0"
-      class="flex-shrink-0"
-      @click="panelMobileAbierto = !panelMobileAbierto"
-    >
-      <v-icon :icon="panelMobileAbierto ? mdiChevronDown : mdiPlus" class="mr-2" />
-      {{ panelMobileAbierto ? 'Ocultar materias' : 'Añadir materias' }}
-    </v-btn>
+    <!-- FAB flotante + opciones móvil -->
+    <div class="flex-shrink-0 position-relative">
+      <!-- FAB flotante (encima del panel de opciones) -->
+      <v-btn
+        v-if="cursosSeleccionados.length > 0"
+        icon
+        size="small"
+        :color="fabAbierto ? 'error' : 'primary'"
+        class="fab-acciones"
+        elevation="4"
+        @click="fabAbierto = !fabAbierto"
+      >
+        <v-icon :icon="fabAbierto ? mdiClose : mdiDotsVertical" />
+      </v-btn>
+
+      <v-expand-transition>
+        <div v-show="fabAbierto && cursosSeleccionados.length > 0" class="border-t bg-surface">
+          <v-list density="compact" nav class="py-1">
+            <v-list-item @click="quitarTodo">
+              <v-list-item-title class="text-body-2">Quitar todo</v-list-item-title>
+              <template #append>
+                <v-avatar size="32" color="error" variant="tonal">
+                  <v-icon :icon="mdiDeleteSweep" size="18" />
+                </v-avatar>
+              </template>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-title class="text-body-2">Imprimir</v-list-item-title>
+              <template #append>
+                <v-avatar size="32" color="primary" variant="tonal">
+                  <v-icon :icon="mdiPrinter" size="18" />
+                </v-avatar>
+              </template>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-title class="text-body-2">Descargar</v-list-item-title>
+              <template #append>
+                <v-avatar size="32" color="primary" variant="tonal">
+                  <v-icon :icon="mdiDownload" size="18" />
+                </v-avatar>
+              </template>
+            </v-list-item>
+          </v-list>
+        </div>
+      </v-expand-transition>
+    </div>
+
+    <!-- Toggle panel inferior -->
+    <div class="flex-shrink-0">
+      <v-btn block variant="tonal" rounded="0" @click="panelMobileAbierto = !panelMobileAbierto">
+        <v-icon :icon="panelMobileAbierto ? mdiChevronDown : mdiPlus" class="mr-2" />
+        {{ panelMobileAbierto ? 'Ocultar materias' : 'Añadir materias' }}
+      </v-btn>
+    </div>
 
     <!-- Parte inferior: navegación de materias -->
     <v-expand-transition>
@@ -366,3 +441,12 @@ async function toggleMateria(materia: Materia) {
     </v-expand-transition>
   </div>
 </template>
+
+<style scoped>
+.fab-acciones {
+  position: absolute;
+  top: -44px;
+  right: 12px;
+  z-index: 5;
+}
+</style>

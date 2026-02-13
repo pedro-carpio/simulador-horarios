@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, nextTick, watch } from 'vue'
+import { computed, ref } from 'vue'
+import { useDisplay } from 'vuetify'
 import { mdiAlertCircleOutline } from '@mdi/js'
 import type { Clase } from '@/services/horarios'
 
@@ -16,9 +17,43 @@ const props = defineProps<{
   cursos: CursoSeleccionado[]
 }>()
 
-/* ── Ref del calendario ── */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const calendarRef = ref<any>(null)
+/* ── Responsive ── */
+const { mobile } = useDisplay()
+const intervalHeight = computed(() => (mobile.value ? 36 : 44))
+
+/* ── Rango dinámico: solo intervalos con eventos ── */
+const INTERVALO_MIN = 90 // minutos
+const BASE_INICIO = 6 * 60 + 45 // 6:45 en minutos
+
+const rangoVisible = computed(() => {
+  if (eventosBase.value.length === 0) {
+    return { firstTime: { hour: 6, minute: 45 }, intervalCount: 10 }
+  }
+
+  let minT = Infinity
+  let maxT = -Infinity
+  for (const e of eventosBase.value) {
+    const s = timeMin(e.start.slice(11))
+    const end = timeMin(e.end.slice(11))
+    if (s < minT) minT = s
+    if (end > maxT) maxT = end
+  }
+
+  // Alinear al slot de 90 min más cercano por debajo del inicio
+  let slotInicio = BASE_INICIO
+  while (slotInicio + INTERVALO_MIN <= minT) slotInicio += INTERVALO_MIN
+  // Al menos un slot antes si hay espacio
+  if (slotInicio > BASE_INICIO) slotInicio -= INTERVALO_MIN
+
+  // Cantidad de intervalos necesarios para cubrir hasta maxT + margen
+  const totalMin = maxT - slotInicio + INTERVALO_MIN // +1 slot de margen
+  const count = Math.max(2, Math.ceil(totalMin / INTERVALO_MIN))
+
+  return {
+    firstTime: { hour: Math.floor(slotInicio / 60), minute: slotInicio % 60 },
+    intervalCount: count,
+  }
+})
 
 /* ── Mapeo de días a offsets desde Lunes ── */
 const DIA_OFFSET: Record<string, number> = {
@@ -54,7 +89,31 @@ function fechaParaDia(dia: string): string {
 
 const calendarValue = computed(() => fmtDate(getLunesRef()))
 
-/* ── Paleta de 10 colores distinguibles ── */
+/* ── Formateo del header: solo nombre de día, sin fecha ── */
+const NOMBRES_DIA: Record<number, string> = {
+  1: 'Lunes',
+  2: 'Martes',
+  3: 'Miércoles',
+  4: 'Jueves',
+  5: 'Viernes',
+  6: 'Sábado',
+}
+const NOMBRES_DIA_CORTO: Record<number, string> = {
+  1: 'Lun',
+  2: 'Mar',
+  3: 'Mié',
+  4: 'Jue',
+  5: 'Vie',
+  6: 'Sáb',
+}
+function weekdayFormat(ts: { weekday: number }, short: boolean) {
+  return short ? (NOMBRES_DIA_CORTO[ts.weekday] ?? '') : (NOMBRES_DIA[ts.weekday] ?? '')
+}
+function dayFormat() {
+  return ''
+}
+
+/* ── Paleta de 20 colores distinguibles ── */
 const COLORES = [
   '#1976D2', // azul
   '#388E3C', // verde
@@ -66,15 +125,25 @@ const COLORES = [
   '#0277BD', // celeste
   '#EF6C00', // naranja fuerte
   '#283593', // índigo
+  '#00ACC1', // cyan
+  '#8E24AA', // púrpura
+  '#43A047', // verde medio
+  '#D81B60', // magenta
+  '#3949AB', // azul índigo
+  '#6D4C41', // marrón
+  '#039BE5', // azul claro
+  '#E65100', // naranja oscuro
+  '#1B5E20', // verde oscuro
+  '#AD1457', // rosa oscuro
 ]
 
-/** Un color por cada materia (por código) */
-const coloresMaterias = computed(() => {
+/** Un color por cada grupo seleccionado (grupoKey = "materiaId-grupoNumero") */
+const coloresGrupos = computed(() => {
   const map = new Map<string, string>()
   let idx = 0
   for (const c of props.cursos) {
-    if (!map.has(c.materiaCodigo)) {
-      map.set(c.materiaCodigo, COLORES[idx % COLORES.length]!)
+    if (!map.has(c.key)) {
+      map.set(c.key, COLORES[idx % COLORES.length]!)
       idx++
     }
   }
@@ -100,7 +169,7 @@ interface EventoCal {
 const eventosBase = computed<EventoCal[]>(() => {
   const out: EventoCal[] = []
   for (const curso of props.cursos) {
-    const color = coloresMaterias.value.get(curso.materiaCodigo) ?? COLORES[0]!
+    const color = coloresGrupos.value.get(curso.key) ?? COLORES[0]!
     for (const c of curso.clases) {
       const fecha = fechaParaDia(c.dia)
       out.push({
@@ -183,30 +252,36 @@ const eventos = computed(() =>
 
 /* ── Leyenda de colores ── */
 const leyenda = computed(() =>
-  Array.from(coloresMaterias.value.entries()).map(([codigo, color]) => {
-    const c = props.cursos.find((x) => x.materiaCodigo === codigo)
-    return { codigo, color, nombre: c?.materiaNombre ?? codigo }
+  props.cursos.map((c) => {
+    const color = coloresGrupos.value.get(c.key) ?? COLORES[0]!
+    const docente = c.clases[0]?.docente ?? ''
+    return {
+      key: c.key,
+      color,
+      texto: `G ${c.grupoNumero}: ${c.materiaNombre} - ${docente}`,
+    }
   }),
 )
-
-/* ── Scroll al rango útil al montar ── */
-async function scrollAlInicio() {
-  await nextTick()
-  try {
-    calendarRef.value?.scrollToTime?.('07:00')
-  } catch {
-    /* component not ready */
-  }
-}
-
-onMounted(scrollAlInicio)
-watch(() => props.cursos.length, scrollAlInicio)
 </script>
 
 <template>
   <div>
+    <!-- Alerta de choques -->
+    <v-alert
+      v-if="conflictos.lista.length"
+      type="error"
+      variant="tonal"
+      density="compact"
+      class="mb-3"
+      :icon="mdiAlertCircleOutline"
+    >
+      <div class="font-weight-bold mb-1">Choques de horario detectados:</div>
+      <div v-for="(c, i) in conflictos.lista" :key="i" class="text-body-2">
+        {{ c.materia1 }} (G{{ c.grupo1 }}) ↔ {{ c.materia2 }} (G{{ c.grupo2 }}) - {{ c.dia }}
+      </div>
+    </v-alert>
+
     <v-calendar
-      ref="calendarRef"
       :model-value="calendarValue"
       type="week"
       :weekdays="[1, 2, 3, 4, 5, 6]"
@@ -214,49 +289,41 @@ watch(() => props.cursos.length, scrollAlInicio)
       :events="eventos"
       event-overlap-mode="column"
       :event-overlap-threshold="30"
-      :first-interval="7"
-      :interval-count="16"
-      :interval-height="48"
-      hide-header
+      :first-time="rangoVisible.firstTime"
+      :interval-minutes="90"
+      :interval-count="rangoVisible.intervalCount"
+      :interval-height="intervalHeight"
+      :weekday-format="weekdayFormat"
+      :day-format="dayFormat"
+      now="2000-01-01 00:00:00"
       locale="es"
     >
       <!-- Contenido custom de cada evento -->
       <template #event="{ event: ev }">
         <div class="semana-ev px-1">
           <div class="semana-ev__name font-weight-bold text-truncate">
-            {{ ev.materiaNombre }}
+            G{{ ev.grupoNumero }}: {{ ev.materiaNombre }}
           </div>
-          <div class="semana-ev__detail text-truncate">G{{ ev.grupoNumero }} · {{ ev.aula }}</div>
+          <div class="semana-ev__detail text-truncate">{{ ev.docente }}</div>
+          <div class="semana-ev__detail text-truncate">{{ ev.aula }}</div>
         </div>
       </template>
     </v-calendar>
 
     <!-- Leyenda de colores por materia -->
     <div v-if="leyenda.length" class="d-flex flex-wrap ga-3 mt-3 px-1">
-      <div v-for="item in leyenda" :key="item.codigo" class="d-flex align-center ga-1">
+      <div v-for="item in leyenda" :key="item.key" class="d-flex align-center ga-1">
         <span class="semana-dot" :style="{ background: item.color }" />
-        <span class="text-caption">{{ item.nombre }}</span>
+        <span class="text-caption">{{ item.texto }}</span>
       </div>
     </div>
-
-    <!-- Alerta de choques -->
-    <v-alert
-      v-if="conflictos.lista.length"
-      type="error"
-      variant="tonal"
-      density="compact"
-      class="mt-3"
-      :icon="mdiAlertCircleOutline"
-    >
-      <div class="font-weight-bold mb-1">Choques de horario detectados:</div>
-      <div v-for="(c, i) in conflictos.lista" :key="i" class="text-body-2">
-        {{ c.materia1 }} (G{{ c.grupo1 }}) ↔ {{ c.materia2 }} (G{{ c.grupo2 }}) — {{ c.dia }}
-      </div>
-    </v-alert>
   </div>
 </template>
 
 <style scoped>
+:deep(.v-calendar-daily_head-day-label) {
+  display: none !important;
+}
 .semana-ev {
   overflow: hidden;
   line-height: 1.25;
