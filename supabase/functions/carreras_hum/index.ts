@@ -24,9 +24,7 @@ function parseCarreras(html: string): { codigo: string; nombre: string }[] {
   const carreras: { codigo: string; nombre: string }[] = [];
 
   // Buscar el <select> con id/name "plan"
-  const selectMatch = html.match(
-    /<select[^>]*(?:id|name)\s*=\s*["']plan["'][^>]*>([\s\S]*?)<\/select>/i
-  );
+  const selectMatch = html.match(/<select[^>]*name=['\"]?plan['\"]?[^>]*>([\s\S]*?)<\/select>/i);
   if (!selectMatch) return carreras;
 
   const selectHtml = selectMatch[1]!;
