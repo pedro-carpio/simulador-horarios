@@ -15,6 +15,10 @@ CREATE TABLE facultades (
     nombre text NOT NULL UNIQUE
 );
 
+-- Insertar facultad por defecto para Humanidades
+INSERT INTO facultades (nombre) VALUES ('Humanidades y Cs. de la Educación');
+-- TODO: revisar otras carreras/facultades necesarias para el sistema
+
 CREATE TABLE niveles (
     id smallserial PRIMARY KEY,
     codigo text NOT NULL UNIQUE,           -- "A", "B", "C", "P", etc.

@@ -244,8 +244,21 @@ export function parseHorarioPdf(pages: PdfPage[]): HorarioParsed {
       const nextItem = allItems[i + 1]
       if (!nextItem) throw new Error('Grupo: sin número a continuación')
 
-      currentGrupo = { numero: parseInt(nextItem.text, 10), clases: [] }
-      i++ // skip number
+      // Robust group number parsing: correct OCR errors (O→0, l→1), extract digits
+      function parseGroupNumber(raw: string): number | null {
+        const cleaned = raw.replace(/O/g, '0').replace(/l/g, '1').replace(/[^0-9]/g, '');
+        const num = parseInt(cleaned, 10);
+        return isNaN(num) ? null : num;
+      }
+      const grupoNumero = parseGroupNumber(nextItem.text);
+      if (grupoNumero === null) {
+        console.warn(`  ⚠ Grupo con número inválido: '${nextItem.text}' (omitido)`);
+        currentGrupo = null;
+        i++;
+        continue;
+      }
+      currentGrupo = { numero: grupoNumero, clases: [] };
+      i++; // skip number
       continue
     }
 

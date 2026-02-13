@@ -158,7 +158,17 @@ async function actualizarCarreras(sb: SupabaseClient): Promise<void> {
   let m: RegExpExecArray | null
 
   while ((m = optionRegex.exec(selectMatch[1])) !== null) {
-    carreras.push({ codigo: m[1], nombre: m[2].trim() })
+    const codigo = m[1]
+    const nombre = m[2].trim()
+    // Ignorar opción "Elija una Carrera" y códigos -1 o vacíos o no numéricos
+    if (
+      codigo === '-1' ||
+      !/^[0-9]+$/.test(codigo) ||
+      nombre.toLowerCase().includes('elija')
+    ) {
+      continue
+    }
+    carreras.push({ codigo, nombre })
   }
   if (carreras.length === 0) throw new Error('No se encontraron carreras en el HTML')
 
@@ -261,9 +271,11 @@ async function main() {
   }
 
   const ACTUALIZAR_VALUE = '__actualizar__'
+  const TODAS_VALUE = '__todas__'
   const carreraChoice = await select({
     message: 'Elige una carrera:',
     choices: [
+      { name: chalk.yellow('★ Todas las carreras (llenar toda la base)'), value: TODAS_VALUE },
       ...carreras.map((c) => ({
         name: `${c.nombre} (${c.codigo})`,
         value: String(c.id),
@@ -272,77 +284,95 @@ async function main() {
     ],
   })
 
-  let carrera: CarreraRow
-
   if (carreraChoice === ACTUALIZAR_VALUE) {
     await actualizarCarreras(sb)
     carreras = await fetchCarreras(sb)
 
     const newChoice = await select({
       message: 'Elige una carrera:',
-      choices: carreras.map((c) => ({
-        name: `${c.nombre} (${c.codigo})`,
-        value: String(c.id),
-      })),
+      choices: [
+        { name: chalk.yellow('★ Todas las carreras (llenar toda la base)'), value: TODAS_VALUE },
+        ...carreras.map((c) => ({
+          name: `${c.nombre} (${c.codigo})`,
+          value: String(c.id),
+        })),
+      ],
     })
-    carrera = carreras.find((c) => String(c.id) === newChoice)!
-  } else {
-    carrera = carreras.find((c) => String(c.id) === carreraChoice)!
+    if (newChoice === TODAS_VALUE) {
+      await cargarTodasCarreras(sb, carreras)
+      return
+    }
+    const carrera = carreras.find((c) => String(c.id) === newChoice)!
+    await cargarUnaCarrera(sb, carrera)
+    return
   }
 
+  if (carreraChoice === TODAS_VALUE) {
+    const confirmar = await confirm({
+      message: chalk.red('¿Estás seguro que quieres cargar horarios de TODAS las carreras? (puede tardar varios minutos)'),
+      default: false,
+    })
+    if (!confirmar) {
+      log.info('Operación cancelada. No se cargó nada.')
+      process.exit(0)
+    }
+    await cargarTodasCarreras(sb, carreras)
+    return
+  }
+
+  const carrera = carreras.find((c) => String(c.id) === carreraChoice)!
+  await cargarUnaCarrera(sb, carrera)
+}
+
+// Carga una sola carrera (extraído de main)
+async function cargarUnaCarrera(sb: SupabaseClient, carrera: CarreraRow) {
+  const chalk = (await import('chalk')).default
+  const { extractText } = await import('./lib/pdf-reader.js')
+  const { parseHorarioPdf } = await import('./lib/pdf-parser.js')
+  const { PayloadSchema } = await import('./lib/schemas.js')
+  const { resolve } = await import('path')
+  const { mkdirSync, writeFileSync } = await import('fs')
+  const log = {
+    info: (msg: string) => console.log(chalk.cyan('ℹ'), msg),
+    ok: (msg: string) => console.log(chalk.green('✔'), msg),
+    warn: (msg: string) => console.log(chalk.yellow('⚠'), msg),
+    err: (msg: string) => console.log(chalk.red('✖'), msg),
+    title: (msg: string) => console.log('\n' + chalk.bold.underline(msg)),
+  }
   log.ok(`Carrera: ${chalk.bold(carrera.nombre)} (codigo: ${carrera.codigo})`)
-
-  // ── Descargar y parsear (siempre todos los niveles) ──
   log.title('Descarga y parseo')
-
   mkdirSync(OUTPUT_DIR, { recursive: true })
-
   log.info('Descargando PDF de todos los niveles (%) …')
   const pdfBuf = await downloadPdf(carrera.codigo, '%')
-    const now = new Date()
-    const dt = now.toISOString().replace(/[-:T]/g, '').slice(0, 12) // yyyymmddhhmm
-    const outFile = resolve(OUTPUT_DIR, `${carrera.codigo}_todos_${dt}.pdf`)
+  const now = new Date()
+  const dt = now.toISOString().replace(/[-:T]/g, '').slice(0, 12) // yyyymmddhhmm
+  const outFile = resolve(OUTPUT_DIR, `${carrera.codigo}_todos_${dt}.pdf`)
   writeFileSync(outFile, pdfBuf)
   log.ok(`PDF guardado: ${outFile} (${pdfBuf.length} bytes)`)
-
   const pages = await extractText(new Uint8Array(pdfBuf))
   const result = parseHorarioPdf(pages)
-
-  // ── Build payload ──
-  // Type assertion is safe: Zod validates the data right after this
   const payload = {
     carrera_id: carrera.id,
     gestion: result.gestion,
     niveles: result.niveles,
   } as Payload
-
-  // ── Validate ──
   log.title('Validación')
-
   const validation = PayloadSchema.safeParse(payload)
-
   if (!validation.success) {
     log.err('El payload no pasó la validación:')
     for (const issue of validation.error.issues) {
       console.log(chalk.red(`  → [${issue.path.join('.')}] ${issue.message}`))
     }
-
-    // Save failed payload for inspection
-      const failPath = resolve(OUTPUT_DIR, `${carrera.codigo}_FALLÓ_${dt}.json`)
+    const failPath = resolve(OUTPUT_DIR, `${carrera.codigo}_FALLÓ_${dt}.json`)
     writeFileSync(failPath, JSON.stringify(payload, null, 2), 'utf-8')
     log.warn(`Payload guardado para inspección: ${failPath}`)
-    process.exit(1)
+    return
   }
-
   log.ok('Validación exitosa ✓')
-
-  // ── Preview ──
   log.title('Resumen')
-
   let totalMaterias = 0
   let totalGrupos = 0
   let totalClases = 0
-
   for (const nivel of payload.niveles) {
     console.log(chalk.bold(`  Nivel ${nivel.codigo} — ${nivel.nombre}`))
     for (const mat of nivel.materias) {
@@ -353,38 +383,40 @@ async function main() {
       totalClases += nClases
     }
   }
-
   console.log(
     chalk.dim(`\n  Total: ${totalMaterias} materias, ${totalGrupos} grupos, ${totalClases} clases`)
   )
-
-  // ── Save JSON ──
-    const jsonPath = resolve(OUTPUT_DIR, `${carrera.codigo}_payload_${dt}.json`)
+  const jsonPath = resolve(OUTPUT_DIR, `${carrera.codigo}_payload_${dt}.json`)
   writeFileSync(jsonPath, JSON.stringify(payload, null, 2), 'utf-8')
   log.ok(`Payload JSON: ${jsonPath}`)
-
-  // ── Confirm upload ──
   log.title('Subida')
-
   const doUpload = await confirm({
     message: `¿Subir estos datos a Supabase (cargar_horarios)?`,
     default: true,
   })
-
   if (!doUpload) {
     log.info('Subida cancelada. El JSON queda guardado.')
-    process.exit(0)
+    return
   }
-
   log.info('Ejecutando cargar_horarios …')
   const { data, error } = await sb.rpc('cargar_horarios', { payload })
-
   if (error) {
     log.err(`Error al subir: ${error.message}`)
-    process.exit(1)
+    return
   }
-
   log.ok(`¡Subida exitosa! Resultado: ${JSON.stringify(data)}`)
+}
+
+// Carga todas las carreras
+async function cargarTodasCarreras(sb: SupabaseClient, carreras: CarreraRow[]) {
+  for (const carrera of carreras) {
+    try {
+      await cargarUnaCarrera(sb, carrera)
+    } catch (err) {
+      console.error(`Error al cargar ${carrera.nombre} (${carrera.codigo}):`, err)
+    }
+  }
+  console.log('\n✔ Proceso de carga masiva finalizado.')
 }
 
 main().catch((err) => {
