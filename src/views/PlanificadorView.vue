@@ -47,6 +47,36 @@ function quitarTodo() {
   fabAbierto.value = false
 }
 
+// Ref al componente SemanaView para llamar sus métodos expuestos
+const semanaRef = ref<InstanceType<typeof SemanaView> | null>(null)
+const semanaRefMobile = ref<InstanceType<typeof SemanaView> | null>(null)
+
+// Nombre legible de la carrera
+const nombreCarrera = computed(() => carrera.replace(/-/g, ' '))
+
+// Subtítulo de nivel: solo si TODOS los cursos seleccionados pertenecen al mismo nivel
+const nombreNivel = computed(() => {
+  if (cursosSeleccionados.value.length === 0) return undefined
+  const nivelesSet = new Set<string>()
+  for (const curso of cursosSeleccionados.value) {
+    const mat = materias.value.find((m) => m.id === Number(curso.key.split('-')[0]))
+    if (mat) nivelesSet.add(mat.nivel_nombre)
+  }
+  return nivelesSet.size === 1 ? [...nivelesSet][0] : undefined
+})
+
+async function descargar() {
+  const ref = semanaRef.value ?? semanaRefMobile.value
+  await ref?.descargar()
+  fabAbierto.value = false
+}
+
+async function imprimir() {
+  const ref = semanaRef.value ?? semanaRefMobile.value
+  await ref?.imprimir()
+  fabAbierto.value = false
+}
+
 // Agrupar materias por nivel
 interface Nivel {
   codigo: string
@@ -257,10 +287,10 @@ async function toggleMateria(materia: Materia) {
           <v-btn icon variant="outlined" size="small" @click="quitarTodo" title="Quitar todo">
             <v-icon :icon="mdiDeleteSweep" />
           </v-btn>
-          <v-btn icon variant="outlined" size="small" title="Imprimir">
+          <v-btn icon variant="outlined" size="small" @click="imprimir" title="Imprimir">
             <v-icon :icon="mdiPrinter" />
           </v-btn>
-          <v-btn icon variant="outlined" size="small" title="Descargar">
+          <v-btn icon variant="outlined" size="small" @click="descargar" title="Descargar">
             <v-icon :icon="mdiDownload" />
           </v-btn>
         </div>
@@ -278,7 +308,13 @@ async function toggleMateria(materia: Materia) {
         </div>
 
         <!-- Cursos seleccionados -->
-        <semana-view v-else :cursos="cursosSeleccionados" />
+        <semana-view
+          v-else
+          ref="semanaRef"
+          :cursos="cursosSeleccionados"
+          :nombre-carrera="nombreCarrera"
+          :nombre-nivel="nombreNivel"
+        />
       </v-container>
     </v-main>
   </v-layout>
@@ -309,7 +345,13 @@ async function toggleMateria(materia: Materia) {
         </div>
 
         <!-- Cursos seleccionados -->
-        <semana-view v-else :cursos="cursosSeleccionados" />
+        <semana-view
+          v-else
+          ref="semanaRefMobile"
+          :cursos="cursosSeleccionados"
+          :nombre-carrera="nombreCarrera"
+          :nombre-nivel="nombreNivel"
+        />
       </v-container>
     </div>
 
@@ -339,7 +381,7 @@ async function toggleMateria(materia: Materia) {
                 </v-avatar>
               </template>
             </v-list-item>
-            <v-list-item>
+            <v-list-item @click="imprimir">
               <v-list-item-title class="text-body-2">Imprimir</v-list-item-title>
               <template #append>
                 <v-avatar size="32" color="primary" variant="tonal">
@@ -347,7 +389,7 @@ async function toggleMateria(materia: Materia) {
                 </v-avatar>
               </template>
             </v-list-item>
-            <v-list-item>
+            <v-list-item @click="descargar">
               <v-list-item-title class="text-body-2">Descargar</v-list-item-title>
               <template #append>
                 <v-avatar size="32" color="primary" variant="tonal">
