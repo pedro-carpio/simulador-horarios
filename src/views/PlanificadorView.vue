@@ -306,17 +306,15 @@ async function toggleMateria(materia: Materia) {
           <template v-if="materias.length === 0 && !cargando && !errorMsg">
             <v-icon size="64" color="grey-lighten-1">mdi-emoticon-sad-outline</v-icon>
             <p class="text-h6 text-medium-emphasis mt-4 text-center">
-              Parece que no encontramos los horarios de esta materia
+              Parece que no encontramos los horarios de esta carrera
             </p>
             <a
               :href="`https://wa.me/59177914381?text=${encodeURIComponent('Tengo un problema con la carrera ' + carrera + ' Y YA CONSULTE SI HAY HORARIOS PUBLICOS PARA MI CARRERA')}`"
               target="_blank"
               rel="noopener"
-              style="text-decoration: none; margin-top: 16px;"
+              style="text-decoration: none; margin-top: 16px"
             >
-              <v-btn color="primary" variant="tonal">
-                Reportar este error
-              </v-btn>
+              <v-btn color="primary" variant="tonal"> Reportar este error </v-btn>
             </a>
           </template>
           <template v-else>
@@ -361,17 +359,15 @@ async function toggleMateria(materia: Materia) {
           <template v-if="materias.length === 0 && !cargando && !errorMsg">
             <v-icon size="48" color="grey-lighten-1">mdi-emoticon-sad-outline</v-icon>
             <p class="text-body-1 text-medium-emphasis mt-3 text-center">
-              Parece que no encontramos los horarios de esta materia
+              Parece que no encontramos los horarios de esta carrera
             </p>
             <a
               :href="`https://wa.me/59177914381?text=${encodeURIComponent('Tengo un problema con la carrera ' + carrera + ' Y YA CONSULTE SI HAY HORARIOS PUBLICOS PARA MI CARRERA')}`"
               target="_blank"
               rel="noopener"
-              style="text-decoration: none; margin-top: 12px;"
+              style="text-decoration: none; margin-top: 12px"
             >
-              <v-btn color="primary" variant="tonal" size="small">
-                Reportar este error
-              </v-btn>
+              <v-btn color="primary" variant="tonal" size="small"> Reportar este error </v-btn>
             </a>
           </template>
           <template v-else>
