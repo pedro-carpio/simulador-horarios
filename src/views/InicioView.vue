@@ -34,11 +34,9 @@ async function seleccionar(carrera: Carrera) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, '-')
   try {
-    await router.push({
-      name: 'planificador',
-      params: { carrera: slug },
-      query: { id: carrera.id },
-    })
+    const query: Record<string, string | number> = { id: carrera.id }
+    if (carrera.last_scraped_at) query.last_scraped = String(carrera.last_scraped_at)
+    await router.push({ name: 'planificador', params: { carrera: slug }, query })
   } catch (e: any) {
     error.value = 'No se pudo navegar a la vista del planificador'
     navegando.value = false

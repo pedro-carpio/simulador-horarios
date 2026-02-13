@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 export interface Carrera {
   id: number
   nombre: string
+  last_scraped_at?: string | null
 }
 
 export interface Materia {
@@ -48,6 +49,7 @@ export async function obtenerMaterias(carreraId: number): Promise<Materia[]> {
   if (error) throw error
   return data as Materia[]
 }
+
 
 export async function obtenerClases(materiaId: number, gestion: string): Promise<Clase[]> {
   const { data, error } = await supabase.rpc('obtener_clases_por_materia', {

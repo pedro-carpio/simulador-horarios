@@ -25,6 +25,7 @@ const GESTION = '1/2026'
 const materias = ref<Materia[]>([])
 const cargando = ref(true)
 const errorMsg = ref('')
+const lastScraped = ref<string | null>(null)
 
 // Sidebar: nivel seleccionado y materias expandidas
 const nivelActivo = ref<string | null>(null)
@@ -162,12 +163,30 @@ const cursosSeleccionados = computed<GrupoSeleccionado[]>(() => {
 onMounted(async () => {
   try {
     materias.value = await obtenerMaterias(carreraId)
+    // No realizar nuevas consultas: leer last_scraped desde la ruta si viene en query
+    const q = route.query
+    const val = (q.last_scraped ?? q.lastScraped) as string | undefined
+    lastScraped.value = val ?? null
   } catch {
     errorMsg.value = 'No se pudieron cargar las materias'
   } finally {
     cargando.value = false
   }
 })
+
+function formatScraped(ts: string | null) {
+  if (!ts) return 'Desconocida'
+  try {
+    const d = new Date(ts)
+    return new Intl.DateTimeFormat('es-ES', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(d)
+  } catch {
+    return 'Desconocida'
+  }
+}
 
 function seleccionarNivel(codigo: string) {
   nivelActivo.value = nivelActivo.value === codigo ? null : codigo
@@ -278,6 +297,23 @@ async function toggleMateria(materia: Materia) {
             </div>
           </v-expand-transition>
         </template>
+
+        <!-- Última actualización y link para reportar (desktop) -->
+        <div class="pa-4">
+          <div class="text-caption text-medium-emphasis">
+            Actualizado por última vez el: {{ formatScraped(lastScraped) }}
+          </div>
+          <div class="text-caption mt-2">
+            <a
+              :href="`https://wa.me/59177914381?text=${encodeURIComponent('Tengo un problema con tu app, si me ayudas te invito un café.')}`"
+              target="_blank"
+              rel="noopener"
+              style="text-decoration: underline; color: inherit"
+            >
+              Reportar un problema
+            </a>
+          </div>
+        </div>
       </v-list>
     </v-navigation-drawer>
 
@@ -434,6 +470,23 @@ async function toggleMateria(materia: Materia) {
           </v-list>
         </div>
       </v-expand-transition>
+
+      <!-- Última actualización y link para reportar (mobile) -->
+      <div class="px-4 pb-2">
+        <div class="text-caption text-medium-emphasis">
+          Actualizado por última vez el: {{ formatScraped(lastScraped) }}
+        </div>
+        <div class="text-caption mt-1">
+          <a
+            :href="`https://wa.me/59177914381?text=${encodeURIComponent('Tengo un problema con tu app, si me ayudas te invito un café.')}`"
+            target="_blank"
+            rel="noopener"
+            style="text-decoration: underline; color: inherit"
+          >
+            Reportar un problema
+          </a>
+        </div>
+      </div>
     </div>
 
     <!-- Toggle panel inferior -->
