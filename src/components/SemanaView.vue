@@ -360,7 +360,7 @@ defineExpose({ descargar, imprimir })
             <div class="semana-ev__name font-weight-bold text-truncate">
               G{{ ev.grupoNumero }}: {{ ev.materiaNombre }}
             </div>
-            <div class="semana-ev__detail text-truncate">{{ ev.docente }}</div>
+            <div v-if="!mobile" class="semana-ev__detail text-truncate">{{ ev.docente }}</div>
             <div class="semana-ev__detail text-truncate">{{ ev.aula }}</div>
           </div>
         </template>

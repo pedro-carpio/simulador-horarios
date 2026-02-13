@@ -10,6 +10,7 @@ const carreraSeleccionada = ref<Carrera | null>(null)
 const busqueda = ref('')
 const cargando = ref(true)
 const error = ref('')
+const navegando = ref(false)
 
 // TODO: obtener facultad_id dinámicamente si se requiere
 const FACULTAD_ID = 1
@@ -24,14 +25,24 @@ onMounted(async () => {
   }
 })
 
-function seleccionar(carrera: Carrera) {
+async function seleccionar(carrera: Carrera) {
   carreraSeleccionada.value = carrera
+  navegando.value = true
   const slug = carrera.nombre
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, '-')
-  router.push({ name: 'planificador', params: { carrera: slug }, query: { id: carrera.id } })
+  try {
+    await router.push({
+      name: 'planificador',
+      params: { carrera: slug },
+      query: { id: carrera.id },
+    })
+  } catch (e: any) {
+    error.value = 'No se pudo navegar a la vista del planificador'
+    navegando.value = false
+  }
 }
 </script>
 
@@ -99,5 +110,24 @@ function seleccionar(carrera: Carrera) {
         </div>
       </v-card-text>
     </v-card>
+    <div
+      v-if="navegando"
+      style="
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 2000;
+      "
+    >
+      <v-card max-width="400" elevation="6" class="pa-6" rounded="lg">
+        <div class="d-flex flex-column align-center">
+          <v-progress-circular indeterminate color="primary" size="48" class="mb-4" />
+          <div class="text-subtitle-1 text-center">Cargando planificador…</div>
+        </div>
+      </v-card>
+    </div>
   </v-container>
 </template>
