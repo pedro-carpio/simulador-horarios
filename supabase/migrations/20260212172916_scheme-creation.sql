@@ -38,6 +38,7 @@ CREATE TABLE docentes (
 CREATE TABLE carreras (
     id smallserial PRIMARY KEY,
     facultad_id smallint NOT NULL REFERENCES facultades(id) ON DELETE CASCADE,
+    codigo text UNIQUE,
     nombre text NOT NULL,
     UNIQUE (facultad_id, nombre)          -- misma carrera no se repite en una facultad
 );
