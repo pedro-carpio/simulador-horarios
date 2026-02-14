@@ -1,5 +1,28 @@
 # simulador-horarios
 
+IMPORTANT: Este proyecto fue creado rápidamente (en un día) y puede contener bugs errores de diseño y problemas de seguridad. Requiere desarrollo y auditoría especializada antes de usarse en producción. Las secciones siguientes describen su estado actual y los componentes principales; contribuciones y revisiones son bienvenidas.
+
+## Composición del proyecto (3 partes prioritarias)
+
+El proyecto se organiza y prioriza en tres áreas principales:
+
+- **Frontend**: Aplicación Vue + Vuetify que consume servicios/RPCs desde Supabase. El frontend utiliza los métodos siguientes a través de `src/services/horarios.ts`:
+  - `obtenerCarreras(facultadId)` — lista de carreras.
+  - `obtenerMaterias(carreraId)` — materias por carrera (incluye nivel).
+  - `obtenerClases(materiaId, gestion)` — clases semanales por grupo para una gestión.
+    Estos tres métodos son la interfaz crítica entre la UI y la base de datos.
+
+- **Scraper / Importador**: El script `scripts/cargar-horarios.ts` actúa como scraper y pipeline de ingestión:
+  - Descarga PDFs públicos desde el sitio de la facultad, extrae texto y parsea horarios.
+  - Construye un payload validado y opcionalmente lo sube mediante la función RPC `cargar_horarios` en Supabase.
+  - Está pensado como herramienta CLI para ser ejecutada por un manteiner con credenciales apropiadas.
+
+- **Migraciones PostgreSQL (Supabase)**: El esquema de la base de datos, funciones RPC y scripts de manipulación están en `supabase/migrations/`. Estas migraciones son necesarias para crear tablas, índices y funciones RPC usadas por el frontend y el scraper.
+
+Lee con atención las migraciones antes de aplicar en un entorno de producción.
+
+--
+
 ## Requisitos previos
 
 - [Node.js](https://nodejs.org/) v18+
@@ -52,6 +75,53 @@ pnpx supabase db push
 ```
 
 Esto aplicará todas las migraciones pendientes en la base de datos remota.
+
+### Scraper / Importador — uso del script `scripts/cargar-horarios.ts`
+
+El proyecto incluye un script CLI que descarga los PDFs públicos de horarios, los
+parsea y opcionalmente sube los datos a Supabase: `scripts/cargar-horarios.ts`.
+
+Resumen de uso:
+
+- Ubicación del script: `scripts/cargar-horarios.ts`.
+- Carpeta de salida: el script escribe artefactos en la carpeta `output/` junto al
+  script (p. ej. `scripts/output/<CARRERA>_payload_YYYYMMDDhhmm.json`).
+- URL de descarga: `https://www.hum.umss.edu.bo/horarios/horario_pdf.php`.
+- Flow interactivo: al ejecutar, el script:
+  1. Conecta a Supabase (lee credenciales o solicita entrada interactiva).
+  2. Intenta leer las `carreras` desde la BD; si no hay carreras llama a
+     `actualizarCarreras()` para extraerlas del HTML público y ejecutar el upsert.
+  3. Permite elegir una carrera o "Todas las carreras" (carga masiva).
+  4. Descarga el PDF (por niveles), parsea, valida el payload con `zod` (`PayloadSchema`).
+  5. Guarda el JSON en `output/` y pregunta si desea subir los datos mediante la RPC
+     `cargar_horarios` (requiere `service_role` key para la subida).
+
+Credenciales y variables de entorno que el script acepta (busca `.env.local`):
+
+- Rutas de `.env.local` buscadas: proyecto raíz o `scripts/.env.local`.
+- Variables detectadas (el script acepta variantes con prefijo `PUBLIC_` o `VITE_`):
+  - `PUBLIC_SUPABASE_URL` o `VITE_SUPABASE_URL`
+  - `PUBLIC_SUPABASE_KEY` o `VITE_SUPABASE_KEY`
+  - `PUBLIC_SERVICE_ROLE_KEY` o `VITE_SERVICE_ROLE_KEY` (NECESARIA para subir)
+
+Si no se encuentran variables válidas, el script pedirá manualmente la `Supabase URL`
+y la `Service Role Key` por prompt. El script detecta si la URL es local (localhost,
+127.0.0.1 o 192.168.\*) y muestra un mensaje acorde.
+
+Ejecutar el scraper (interactivo):
+
+```sh
+npx tsx scripts/cargar-horarios.ts
+```
+
+Notas y precauciones:
+
+- El script es interactivo y no tiene un modo totalmente "headless" documentado.
+- Para la subida automática a Supabase se requiere la `service role key`: manéjala con
+  cuidado (no la publiques en repositorios). Si no la proporcionas, el script seguirá
+  hasta generar el payload y lo dejará en `output/`.
+- Revisa los logs `DEBUG ENV` que el script imprime cuando detecta variables de entorno
+  — son útiles para diagnosticar problemas de conexión.
 
 ### Compile and Hot-Reload for Development
 
@@ -193,3 +263,8 @@ Facultad --▶ obtenerCarreras() --▶ Carreras
 Carrera  --▶ obtenerMaterias() --▶ Materias (con nivel)
 Materia  --▶ obtenerClases()   --▶ Clases semanales por grupo
 ```
+
+## Licencia
+
+Este repositorio se publica bajo la licencia MIT. Se ha añadido un archivo `LICENSE`
+con el texto completo de la licencia.
