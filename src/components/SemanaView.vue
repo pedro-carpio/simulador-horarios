@@ -172,14 +172,22 @@ interface EventoCal {
 
 const eventosBase = computed<EventoCal[]>(() => {
   const out: EventoCal[] = []
+  const seen = new Set<string>()
   for (const curso of props.cursos) {
     const color = coloresGrupos.value.get(curso.key) ?? COLORES[0]!
     for (const c of curso.clases) {
+      // dedupe by curso key + dia + horarios
+      const startShort = c.hora_inicio.slice(0, 5)
+      const endShort = c.hora_fin.slice(0, 5)
+      const id = `${curso.key}|${c.dia}|${startShort}|${endShort}`
+      if (seen.has(id)) continue
+      seen.add(id)
+
       const fecha = fechaParaDia(c.dia)
       out.push({
         name: curso.materiaNombre,
-        start: `${fecha} ${c.hora_inicio.slice(0, 5)}`,
-        end: `${fecha} ${c.hora_fin.slice(0, 5)}`,
+        start: `${fecha} ${startShort}`,
+        end: `${fecha} ${endShort}`,
         color,
         timed: true,
         materiaCodigo: curso.materiaCodigo,
