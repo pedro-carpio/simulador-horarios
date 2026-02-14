@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useDisplay } from 'vuetify'
 import { useRoute } from 'vue-router'
 import { obtenerMaterias, obtenerClases, type Materia, type Clase } from '@/services/horarios'
 import {
@@ -43,6 +44,9 @@ const panelMobileAbierto = ref(true)
 
 // Mobile: FAB menú acciones
 const fabAbierto = ref(false)
+
+// display helpers
+const { mobile } = useDisplay()
 
 // Acción: quitar todos los grupos seleccionados
 function quitarTodo() {
