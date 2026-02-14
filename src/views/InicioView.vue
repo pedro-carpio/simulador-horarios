@@ -56,8 +56,13 @@ async function seleccionar(carrera: Carrera) {
       </router-link>
     </div>
     <v-card max-width="500" width="100%" elevation="2" rounded="lg">
-      <v-card-title class="text-h5 text-center pt-6">
-        Simulador de Horarios para Humanidades
+      <v-card-title class="text-center pt-6">
+        <h1 class="text-h5 inicio-title" style="margin: 0">
+          Simulador de Horarios para Humanidades UMSS
+        </h1>
+        <div class="text-body-2 text-center mt-2">
+          Planifica tus materias, combina grupos y exporta tu horario en PDF.
+        </div>
       </v-card-title>
 
       <v-card-subtitle class="text-center pb-2">
@@ -138,3 +143,18 @@ async function seleccionar(carrera: Carrera) {
     </div>
   </v-container>
 </template>
+
+<style scoped>
+.inicio-title {
+  margin: 0;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 420px) {
+  .inicio-title {
+    font-size: 1.05rem; /* reduce slightly on very small screens */
+    line-height: 1.15;
+  }
+}
+</style>
