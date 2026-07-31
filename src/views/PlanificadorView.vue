@@ -22,7 +22,7 @@ const carrera = route.params.carrera as string
 const carreraId = Number(route.query.id)
 
 // TODO: hacerlo dinámico
-const GESTION = '1/2026'
+const GESTION = '2/2026'
 
 const materias = ref<Materia[]>([])
 const cargando = ref(true)
@@ -44,6 +44,7 @@ const panelMobileAbierto = ref(true)
 
 // Mobile: FAB menú acciones
 const fabAbierto = ref(false)
+const mostrarMensajeExportacion = ref(false)
 
 // display helpers
 const { mobile } = useDisplay()
@@ -72,15 +73,13 @@ const nombreNivel = computed(() => {
   return nivelesSet.size === 1 ? [...nivelesSet][0] : undefined
 })
 
-async function descargar() {
-  const ref = semanaRef.value ?? semanaRefMobile.value
-  await ref?.descargar()
+function descargar() {
+  mostrarMensajeExportacion.value = true
   fabAbierto.value = false
 }
 
-async function imprimir() {
-  const ref = semanaRef.value ?? semanaRefMobile.value
-  await ref?.imprimir()
+function imprimir() {
+  mostrarMensajeExportacion.value = true
   fabAbierto.value = false
 }
 
@@ -632,6 +631,10 @@ async function toggleMateria(materia: Materia) {
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-snackbar v-model="mostrarMensajeExportacion" timeout="2200" location="bottom">
+    estoy trabajando en ello
+  </v-snackbar>
 </template>
 
 <style scoped>
