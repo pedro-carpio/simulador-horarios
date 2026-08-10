@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useDisplay } from 'vuetify'
 import { mdiAlertCircleOutline } from '@mdi/js'
 import type { Clase } from '@/services/horarios'
-import { descargarHorario, imprimirHorario } from '@/utils/exportarHorario'
+import { descargarHorario, imprimirHorario, type ExportOpts } from '@/utils/exportarHorario'
 
 /* -- Tipos -- */
 
@@ -276,44 +276,48 @@ const leyenda = computed(() =>
 )
 
 /* -- Exportar: imprimir / descargar -- */
-const capturaRef = ref<HTMLElement | null>(null)
 const exportando = ref(false)
 
-function buildTitulo() {
-  return `Horario ${props.nombreCarrera ?? ''}`
+/**
+ * La exportación se arma con los mismos datos que alimentan el calendario, no
+ * capturando el DOM: así el horario impreso solo contiene los rangos que el
+ * usuario realmente tiene.
+ */
+function buildOpts(): ExportOpts {
+  return {
+    titulo: `Horario ${props.nombreCarrera ?? ''}`.trim(),
+    subtitulo: props.nombreNivel ? `Semestre: ${props.nombreNivel}` : undefined,
+    eventos: eventos.value.map((e) => ({
+      materiaNombre: e.materiaNombre,
+      grupoNumero: e.grupoNumero,
+      docente: e.docente,
+      aula: e.aula,
+      dia: e.dia,
+      horaInicio: e.start.slice(11),
+      horaFin: e.end.slice(11),
+      color: e.color,
+    })),
+    leyenda: leyenda.value.map((l) => ({ color: l.color, texto: l.texto })),
+    advertencias: conflictos.value.lista.map(
+      (c) => `${c.materia1} (G${c.grupo1}) y ${c.materia2} (G${c.grupo2}) chocan el ${c.dia}`,
+    ),
+  }
 }
 
-function buildSubtitulo() {
-  return props.nombreNivel ? `Semestre: ${props.nombreNivel}` : undefined
-}
-
-async function descargar() {
-  if (!capturaRef.value) return
+async function exportar(accion: (opts: ExportOpts) => Promise<void>) {
+  if (exportando.value) return
   exportando.value = true
   try {
-    await descargarHorario({
-      elemento: capturaRef.value,
-      titulo: buildTitulo(),
-      subtitulo: buildSubtitulo(),
-    })
+    await accion(buildOpts())
+  } catch (e) {
+    console.error('Error al exportar el horario', e)
   } finally {
     exportando.value = false
   }
 }
 
-async function imprimir() {
-  if (!capturaRef.value) return
-  exportando.value = true
-  try {
-    await imprimirHorario({
-      elemento: capturaRef.value,
-      titulo: buildTitulo(),
-      subtitulo: buildSubtitulo(),
-    })
-  } finally {
-    exportando.value = false
-  }
-}
+const descargar = () => exportar(descargarHorario)
+const imprimir = () => exportar(imprimirHorario)
 
 defineExpose({ descargar, imprimir })
 </script>
@@ -328,8 +332,7 @@ defineExpose({ descargar, imprimir })
       </div>
     </v-overlay>
 
-    <!-- Zona capturable para PDF/impresión -->
-    <div ref="capturaRef" style="background: #fff">
+    <div style="background: #fff">
       <!-- Alerta de choques -->
       <v-alert
         v-if="conflictos.lista.length"
@@ -382,7 +385,6 @@ defineExpose({ descargar, imprimir })
         </div>
       </div>
     </div>
-    <!-- /capturaRef -->
   </div>
 </template>
 

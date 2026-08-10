@@ -44,7 +44,6 @@ const panelMobileAbierto = ref(true)
 
 // Mobile: FAB menú acciones
 const fabAbierto = ref(false)
-const mostrarMensajeExportacion = ref(false)
 
 // display helpers
 const { mobile } = useDisplay()
@@ -73,14 +72,22 @@ const nombreNivel = computed(() => {
   return nivelesSet.size === 1 ? [...nivelesSet][0] : undefined
 })
 
+// Ambas vistas (desktop y mobile) están montadas a la vez; se usa la que
+// corresponde al viewport actual.
+function semanaActiva() {
+  return mobile.value
+    ? (semanaRefMobile.value ?? semanaRef.value)
+    : (semanaRef.value ?? semanaRefMobile.value)
+}
+
 function descargar() {
-  mostrarMensajeExportacion.value = true
   fabAbierto.value = false
+  semanaActiva()?.descargar()
 }
 
 function imprimir() {
-  mostrarMensajeExportacion.value = true
   fabAbierto.value = false
+  semanaActiva()?.imprimir()
 }
 
 // Agrupar materias por nivel
@@ -631,10 +638,6 @@ async function toggleMateria(materia: Materia) {
       </v-card-actions>
     </v-card>
   </v-dialog>
-
-  <v-snackbar v-model="mostrarMensajeExportacion" timeout="2200" location="bottom">
-    estoy trabajando en ello
-  </v-snackbar>
 </template>
 
 <style scoped>
